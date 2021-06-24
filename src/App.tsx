@@ -18,18 +18,17 @@ const App: React.FC = () => {
   const { address, connect, destroy, kit, performActions } = useContractKit();
   const { actions, salt } = ACTIONS;
 
-  const initialDeploymentMap = actions.reduce((acc, action) => {
-    return { ...acc, [action.contract]: false };
+  const initialDeploymentMap = actions.reduce((acc, _, idx) => {
+    return { ...acc, [idx]: false };
   }, {});
 
   const deployedMapCall = React.useCallback(async () => {
     const bytecodes = await Promise.all(
       actions.map((action) => kit.web3.eth.getCode(action.expectedAddress))
     );
-    return actions.reduce((acc, action, idx) => {
+    return actions.reduce((acc, _, idx) => {
       const isDeployed = bytecodes[idx] && bytecodes[idx] !== "0x";
-      console.log(action.contract, bytecodes[idx]);
-      return { ...acc, [action.contract]: isDeployed };
+      return { ...acc, [idx]: isDeployed };
     }, {});
   }, [actions, kit]);
 
@@ -130,7 +129,7 @@ const App: React.FC = () => {
         </Container>
 
         {actions.map((action, idx) => {
-          const isDeployed = deployedMap[action.contract];
+          const isDeployed = deployedMap[idx];
           const disabled = (() => {
             if (!address) {
               return true;
@@ -142,7 +141,7 @@ const App: React.FC = () => {
             if (idx === 0) {
               return isDeployed;
             }
-            const previousDeployed = deployedMap[actions[idx - 1].contract];
+            const previousDeployed = deployedMap[idx - 1];
 
             // All other actions are disabled if the previous action has not yet been deployed
             // or itself has already been deployed
@@ -154,8 +153,10 @@ const App: React.FC = () => {
               <Flex
                 sx={{ justifyContent: "space-between", alignItems: "center" }}
               >
-                <Container>
-                  <Text>{action.contract}</Text>
+                <Container mr={4}>
+                  <Text>
+                    {action.title} ({action.contract})
+                  </Text>
                   <br />
                   <Text variant="regularGray">{action.description}</Text>
                 </Container>
