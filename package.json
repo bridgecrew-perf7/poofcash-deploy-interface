@@ -50,9 +50,9 @@
   },
   "scripts": {
     "start": "REACT_APP_CHAIN_ID=42220 yarn start:alfajores",
-    "start:alfajores": "react-scripts --max_old_space_size=4096 start",
+    "start:alfajores": "yarn typechain && react-scripts --max_old_space_size=4096 start",
     "build": "REACT_APP_CHAIN_ID=42220 yarn build:alfajores",
-    "build:alfajores": "react-scripts --max_old_space_size=4096 build",
+    "build:alfajores": "yarn typechain && react-scripts --max_old_space_size=4096 build",
     "typechain": "typechain --target=web3-v1 'src/**/abis/**/*.json' --out-dir src/generated/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
