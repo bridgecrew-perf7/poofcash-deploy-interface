@@ -7,9 +7,11 @@ import { useContractKit } from "@celo-tools/use-contractkit";
 import { useAsyncState } from "hooks/useAsyncState";
 import { Deployer } from "generated/Deployer";
 import DeployerABI from "abis/Deployer.json";
+import IERC20ABI from "abis/IERC20.json";
 import { AbiItem, toWei } from "web3-utils";
 import { BlockscoutAddressLink } from "components/Links";
 import { ACTIONS, NETWORK_NAME } from "config";
+import { IERC20 } from "generated/IERC20";
 
 const DEPLOYER_ADDR = "0x60483A552391b4388C1F03af4cEf38e51ab00FA2";
 
@@ -18,20 +20,42 @@ const App: React.FC = () => {
   const { address, connect, destroy, kit, performActions } = useContractKit();
   const { actions, salt } = ACTIONS;
 
-  const initialDeploymentMap = actions.reduce((acc, _, idx) => {
-    return { ...acc, [idx]: false };
+  const initialDeploymentMap = actions.reduce((acc, action) => {
+    return { ...acc, [action.expectedAddress]: false };
   }, {});
 
   const deployedMapCall = React.useCallback(async () => {
-    const bytecodes = await Promise.all(
-      actions.map((action) => kit.web3.eth.getCode(action.expectedAddress))
+    const voucherAddr = actions.find((a) => a.contract === "Voucher.sol")!
+      .expectedAddress;
+    const voucherDeployed = await kit.web3.eth
+      .getCode(voucherAddr)
+      .then((bytecode) => bytecode && bytecode !== "0x");
+    const voucher =
+      voucherDeployed &&
+      ((new kit.web3.eth.Contract(
+        IERC20ABI as AbiItem[],
+        voucherAddr
+      ) as unknown) as IERC20);
+    const isDeployedList = await Promise.all(
+      actions.map((action) => {
+        if (action.contract === "Airdrop.sol") {
+          if (!voucher) {
+            return false;
+          }
+          return voucher.methods
+            .balanceOf(action.expectedAddress)
+            .call()
+            .then((bal) => bal === "0");
+        }
+        return kit.web3.eth.getCode(action.expectedAddress).then((bytecode) => {
+          return bytecode && bytecode !== "0x";
+        });
+      })
     );
-    return actions.reduce((acc, _, idx) => {
-      const isDeployed = bytecodes[idx] && bytecodes[idx] !== "0x";
-      return { ...acc, [idx]: isDeployed };
+    return actions.reduce((acc, action, idx) => {
+      return { ...acc, [action.expectedAddress]: isDeployedList[idx] };
     }, {});
   }, [actions, kit]);
-
   const [deployedMap, refetchDeployedMap] = useAsyncState<
     Record<string, boolean>
   >(initialDeploymentMap, deployedMapCall);
@@ -129,7 +153,7 @@ const App: React.FC = () => {
         </Container>
 
         {actions.map((action, idx) => {
-          const isDeployed = deployedMap[idx];
+          const isDeployed = deployedMap[action.expectedAddress];
           const disabled = (() => {
             if (!address) {
               return true;
@@ -137,15 +161,9 @@ const App: React.FC = () => {
             if (isDeployed) {
               return true;
             }
-            // The first action only has a dependency on itself
-            if (idx === 0) {
-              return isDeployed;
-            }
-            const previousDeployed = deployedMap[idx - 1];
-
-            // All other actions are disabled if the previous action has not yet been deployed
-            // or itself has already been deployed
-            return !previousDeployed || isDeployed;
+            return action.dependsOn
+              .map((addr) => deployedMap[addr])
+              .some((dep) => !dep);
           })();
 
           return (
