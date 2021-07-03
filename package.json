@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@celo-tools/use-contractkit": "^1.0.0-beta.12",
     "@celo/contractkit": "^1.0.2",
     "@celo/wallet-ledger": "^1.0.2",
     "@emotion/styled": "^10.0.27",
@@ -23,6 +22,7 @@
     "@types/react-modal": "^3.12.0",
     "@types/react-router-dom": "^5.1.7",
     "@ubeswap/sdk": "^2.0.1",
+    "@ubeswap/use-contractkit": "^1.0.0-ube.6",
     "axios": "^0.21.1",
     "i18next": "^20.2.1",
     "moment": "^2.29.1",

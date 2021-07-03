@@ -3,7 +3,7 @@ import { Container, Flex, Text, Card, Button } from "theme-ui";
 import { Header } from "components/Header";
 import "i18n/config";
 import { useTranslation } from "react-i18next";
-import { useContractKit } from "@celo-tools/use-contractkit";
+import { useContractKit } from "@ubeswap/use-contractkit";
 import { useAsyncState } from "hooks/useAsyncState";
 import { Deployer } from "generated/Deployer";
 import DeployerABI from "abis/Deployer.json";

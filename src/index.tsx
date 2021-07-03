@@ -9,10 +9,10 @@ import {
   Alfajores,
   ContractKitProvider,
   Mainnet,
-} from "@celo-tools/use-contractkit";
+} from "@ubeswap/use-contractkit";
 import { ChainId } from "@ubeswap/sdk";
 
-import "@celo-tools/use-contractkit/lib/styles.css";
+import "@ubeswap/use-contractkit/lib/styles.css";
 import "index.css";
 
 declare global {
